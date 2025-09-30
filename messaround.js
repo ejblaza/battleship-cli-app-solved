@@ -115,6 +115,14 @@ function didUserWin(board) {
   }
 }
 
+const createEmptyCell = () => ({ type: "empty", hit: false });
+
+const createBoardSize = (size) => {
+  return [...Array(size)].map((row) =>
+    [...Array(size)].map((cell) => createEmptyCell())
+  );
+};
+
 const testBoard1 = [
   [
     { type: "empty", hit: false }, // Represents position A0
@@ -166,12 +174,14 @@ const testBoard1 = [
   ],
 ];
 
+console.log(createBoardSize(4));
+
 // console.log("Starting board for testBoard1...");
 // console.log(testBoard1[0]);
 // startingBoard(testBoard1);
 // printBoard(testBoard1, false);
 console.log("Test Board 1 is...");
-printBoard(testBoard1, false);
+printBoard(createBoardSize(4), false);
 // let userWon = false;
 // let updatedBoard = testBoard1;
 // let attempts = 0;

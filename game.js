@@ -1,72 +1,36 @@
 const readlineSync = require("readline-sync");
 const gameHelpers = require("./game-helpers.js");
+const { gameConfig, shipsConfig } = require("./config.js");
 
 // Attempted to destructure for cleaner and DRY code but it breaks game flow
-// const {
-//   userSelectBoard,
-//   letterToNumber,
-//   startingBoard,
-//   printBoard,
-//   didUserWin,
-// } = gameHelpers;
+const {
+  userSelectBoard,
+  startingBoard,
+  generateShips,
+  printBoard,
+  didUserWin,
+  userMove,
+} = gameHelpers;
 
 // Welcomes the user and prompts user to choose the size board to play
-function introduction() {
+function introduction(config) {
   console.log("Welcome to Battleship 🚢");
+
+  const boardOptionsLabels = Object.entries(config).map(
+    ([key, value]) =>
+      `${key}x${key}\n\tIncludes:\n\t\t- ${value.large} large ship\n\t\t- ${value.small} small ship`
+  );
   const boardSelect = readlineSync.keyInSelect(
-    [
-      "4x4\n\tIncludes:\n\t\t- 1 large ship\n\t\t- 1 small ship",
-      "5x5\n\tIncludes:\n\t\t- 1 large ship\n\t\t- 2 small ship",
-      "6x6\n\tIncludes:\n\t\t- 2 large ship\n\t\t- 2 small ship",
-    ],
+    boardOptionsLabels,
     "Choose a board size:"
   );
-  return gameHelpers.userSelectBoard(boardSelect);
+  return userSelectBoard(boardSelect);
 }
 
-// Prompts user to guess the position to hit
-function userMove(board) {
-  const selectedMove = readlineSync.question(
-    "Make a guess eg.. A1, B2, etc...\n"
-  );
-  const positionLetter = gameHelpers.letterToNumber(selectedMove.charAt(0));
-  const positionNumber = parseInt(selectedMove.charAt(1));
-
+function handleGameCompletion(board) {
   console.clear();
-  if (positionLetter == null || positionNumber >= board.length) {
-    console.log(
-      `${selectedMove.charAt(0)}${positionNumber} is outside the board!`
-    );
-    return board;
-  } else if (board[positionLetter][positionNumber].hit === true) {
-    console.log(
-      `${selectedMove.charAt(0)}${positionNumber} has already been shot at!`
-    );
-  } else {
-    if (
-      board[positionLetter][positionNumber].type === "large" ||
-      board[positionLetter][positionNumber].type === "small"
-    ) {
-      console.log(`HIT AT ${selectedMove.charAt(0)}${positionNumber}!`);
-    } else if (board[positionLetter][positionNumber].type === "empty") {
-      console.log(`MISS AT ${selectedMove.charAt(0)}${positionNumber}!`);
-    }
-    board[positionLetter][positionNumber].hit = true;
-    return board;
-  }
-}
-
-function gameFlow(board) {
-  let userWon = false;
-  let attempts = 0;
-  while (!userWon) {
-    gameHelpers.printBoard(board);
-    board = userMove(board);
-    userWon = gameHelpers.didUserWin(board);
-    if (userWon) {
-      console.clear();
-      gameHelpers.printBoard(board);
-      console.log(`========\n
+  printBoard(board);
+  console.log(`========\n
 __   _______ _   _   _    _ _____ _   _
 \\ \\ / /  _  | | | | | |  | |_   _| \\ | |
  \\ V /| | | | | | | | |  | | | | |  \\| |
@@ -74,22 +38,39 @@ __   _______ _   _   _    _ _____ _   _
   | | \\ \\_/ / |_| | \\  /\\  /_| |_| |\\  |
   \\_/  \\___/ \\___/   \\/  \\/ \\___/\\_| \\_/
 \n========`);
+}
+
+function gameFlow(board) {
+  let userWon = false;
+  let attempts = 0;
+  while (!userWon) {
+    printBoard(board, false);
+    board = userMove(board);
+    userWon = didUserWin(board);
+    if (userWon) {
+      handleGameCompletion(board);
     }
     attempts++;
   }
   console.log(`Won the game in ${attempts} attempts!`);
 }
 
-// Start of game
-const selectedBoard = introduction();
-let updatedBoard = selectedBoard;
+const runBattleship = (config, shipConfig) => {
+  // Start of game
+  const boardSelected = introduction(config, shipConfig);
 
-if (selectedBoard === null) {
-  console.log("Hope you come back to play soon!");
-} else {
-  console.clear();
-  gameHelpers.startingBoard(selectedBoard);
+  if (boardSelected === null) {
+    console.log("Hope you come back to play soon!");
+  } else {
+    console.clear();
 
-  gameFlow(updatedBoard);
-}
-// End of game
+    startingBoard(boardSelected);
+    generateShips(boardSelected, config, shipConfig);
+
+    gameFlow(boardSelected);
+    // End of game
+  }
+};
+
+// Game Execution
+runBattleship(gameConfig, shipsConfig);
