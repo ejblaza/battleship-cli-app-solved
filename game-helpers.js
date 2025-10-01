@@ -43,7 +43,7 @@ const data = {
   },
 
   // Adds 'typeShape' property to board position object to hold the symbol based on the position's 'type'
-  getTypeShape: function (board, shipsConfig) {
+  getTypeShape: function (board) {
     for (let i = 0; i < board.length; i++) {
       for (let k = 0; k < board[i].length; k++) {
         board[i][k].typeShape = shipsConfig[board[i][k].type].shape;
@@ -75,37 +75,151 @@ const data = {
     return Math.floor(Math.random() * max);
   },
 
-  checkIfSpacesEmpty: function (board, row, column, direction, units) {},
+  checkIfNextSpacesEmpty: function (
+    board,
+    row,
+    column,
+    direction,
+    units,
+    shipType
+  ) {
+    console.log("funciton 'checkIfNextSpacesEmpty' is working");
+    const checkArray = [];
+    if (direction == 0) {
+      for (i = 1; i < units; i++) {
+        if (board[row + i][column].type.includes("empty"))
+          checkArray.push(board[row + i][column]);
+      }
+      if (checkArray.length == units - 1) {
+        checkArray.forEach((space) => (space.type = shipType));
+        console.log("checkArray: ", checkArray);
+        for (i = 1; i < units; i++) {
+          board[row + i][column] = checkArray[i - 1];
+          console.log(
+            `board[${row} + ${i}][${column}]:`,
+            board[row + i][column]
+          );
+        }
+      } else {
+        checkArray = [];
+        for (i = 1; i < units; i++) {
+          if (board[row - i][column].type.includes("empty"))
+            checkArray.push(board[row - i][column]);
+        }
+        if (checkArray.length == units - 1) {
+          checkArray.forEach((space) => (space.type = shipType));
+          console.log("checkArray: ", checkArray);
+          for (i = 1; i < units; i++) {
+            board[row - i][column] = checkArray[i - 1];
+            console.log(
+              `board[${row} - ${i}][${column}]:`,
+              board[row + i][column]
+            );
+          }
+        } else this.placeShip(board, shipType);
+      }
+    } else if (direction == 1) {
+      for (i = 1; i < units; i++) {
+        if (board[row][column + i].type.includes("empty"))
+          checkArray.push(board[row][column + i]);
+      }
+      if (checkArray.length == units - 1) {
+        checkArray.forEach((space) => (space.type = shipType));
+        console.log("checkArray: ", checkArray);
+        for (i = 1; i < units; i++) {
+          board[row][column + i] = checkArray[i - 1];
+          console.log(
+            `board[${row}][${column} + ${i}]:`,
+            board[row + i][column]
+          );
+        }
+      } else {
+        checkArray = [];
+        for (i = 1; i < units; i++) {
+          if (board[row][column - i].type.includes("empty"))
+            checkArray.push(board[row][column - i]);
+        }
+        if (checkArray.length == units - 1) {
+          checkArray.forEach((space) => (space.type = shipType));
+          console.log("checkArray: ", checkArray);
+          for (i = 1; i < units; i++) {
+            board[row][column - i] = checkArray[i - 1];
+            console.log(
+              `board[${row}][${column} - ${i}]:`,
+              board[row + i][column]
+            );
+          }
+        } else this.placeShip(board, shipType);
+      }
+    }
+  },
 
-  placeShip: function (board, shipType, shipsConfig) {
-    const shipDirection = this.getRandomInt(1); // 0: vertical ship direction; 1 horizontal ship direction
-    const placeShipInRow = board[this.getRandomInt(board.length)];
-    const placeShipInColumn = board[this.getRandomInt(board.length)];
+  checkIfStartOffShipInBoard: function (board, row, column, direction, units) {
+    const addToShip = units - 1;
+    let result;
+    console.log("CHECKING");
+    if (direction == 0) {
+      result =
+        row + addToShip < board.length || row - addToShip > 0 ? true : false;
+    } else if (direction == 1) {
+      result =
+        column + addToShip < board.length || column - addToShip > 0
+          ? true
+          : false;
+    }
+    console.log("DONE CHECK:", result);
+    return result;
+  },
+
+  placeShip: function (board, shipType) {
+    const shipDirection = this.getRandomInt(2); // 0: vertical ship direction; 1 horizontal ship direction
+    console.log("direction: ", shipDirection);
+    const placeShipInRow = this.getRandomInt(board.length);
+    console.log("row: ", placeShipInRow);
+    const placeShipInColumn = this.getRandomInt(board.length);
+    console.log("column: ", placeShipInColumn);
+    const shipLength = shipsConfig[shipType].units;
 
     const spaceCurrentlyEmpty =
       board[placeShipInRow][placeShipInColumn].type.includes("empty");
     if (spaceCurrentlyEmpty) {
       board[placeShipInRow][placeShipInColumn].type = shipType;
-      if (shipDirection === 0) {
-        const nextSpaceVerticalCurrentlyValid =
-          placeShipInRow + shipsConfig[shipType].units < board.length;
-        if (nextSpaceVerticalCurrentlyValid) {
-          this.checkIfSpacesEmpty;
-        }
+      console.log("checkIfStartOffShipInBoard");
+      if (
+        this.checkIfStartOffShipInBoard(
+          board,
+          placeShipInRow,
+          placeShipInColumn,
+          shipDirection,
+          shipLength
+        )
+      ) {
+        console.log("funciton 'checkIfStartOffShipInBoard' is working");
+        this.checkIfNextSpacesEmpty(
+          board,
+          placeShipInRow,
+          placeShipInColumn,
+          shipDirection,
+          shipLength,
+          shipType
+        );
+      } else {
+        board[placeShipInRow][placeShipInColumn].type = "empty";
+        this.placeShip(board, shipType);
       }
-    } else this.placeShip(board, shipType, shipsConfig);
+    } else this.placeShip(board, shipType);
   },
 
-  generateShips: function (board, gameConfig, shipsConfig) {
-    const smallShipTotal = gameConfig[board.length].small;
-    const largeShipTotal = gameConfig[board.length].large;
+  generateShips: function (board) {
+    let smallShipTotal = gameConfig[board.length].small;
+    let largeShipTotal = gameConfig[board.length].large;
 
     while (smallShipTotal > 0) {
-      this.placeShip(board, "small", shipsConfig);
+      this.placeShip(board, "small");
       smallShipTotal--;
     }
     while (largeShipTotal > 0) {
-      this.placeShip(board, "large", shipsConfig);
+      this.placeShip(board, "large");
       largeShipTotal--;
     }
   },
@@ -118,7 +232,7 @@ const data = {
     const positionLetter = this.letterToNumber(selectedMove.charAt(0));
     const positionNumber = parseInt(selectedMove.charAt(1));
 
-    console.clear();
+    // console.clear();
 
     const isCoordOutBoard =
       positionLetter == null || positionNumber >= board.length;
@@ -168,10 +282,9 @@ const data = {
 
 const userSelectBoard = (size) => data.userSelectBoard(size);
 const letterToNumber = (char) => data.letterToNumber(char);
-const getTypeShape = (board, shipsConfig) => getTypeShape(board, shipsConfig);
+const getTypeShape = (board) => getTypeShape(board);
 const startingBoard = (board) => data.startingBoard(board);
-const generateShips = (board, gameConfig, shipsConfig) =>
-  data.generateShips(board, gameConfig, shipsConfig);
+const generateShips = (board) => data.generateShips(board);
 const printBoard = (board, debug) => data.printBoard(board, debug);
 const didUserWin = (board) => data.didUserWin(board);
 const userMove = (board) => data.userMove(board);

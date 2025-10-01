@@ -1,4 +1,10 @@
 const readlineSync = require("readline-sync");
+const { gameConfig, shipsConfig } = require("./config.js");
+
+const checkArray = new Array(2);
+console.log(checkArray.length);
+checkArray.push("pushed");
+console.log(checkArray.length);
 
 function printBoard(board, debug) {
   const arrayColumnType = [];
