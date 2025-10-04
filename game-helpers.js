@@ -75,7 +75,67 @@ const data = {
     return Math.floor(Math.random() * max);
   },
 
-  checkIfNextSpacesEmpty: function (
+  // 4 check functions to determine if the spaces from the starting point of the
+  // ship is available to place the ship completely.
+  // One function for each direction
+  checkDown: function (array, board, row, column, size, shipType) {
+    for (i = 1; i < size; i++) {
+      if (board[row + i][column].type.includes("empty"))
+        array.push(board[row + i][column]);
+    }
+    if (array.length == size - 1) {
+      for (i = 0; i < size; i++) {
+        board[row + i][column].type = shipType;
+      }
+    } else this.checkUp(array, board, row, column, size, shipType);
+  },
+
+  checkUp: function (array, board, row, column, size, shipType) {
+    array.length = 0;
+    const shipExceedsBoardUp = row - size + 1 >= 0;
+    if (shipExceedsBoardUp) {
+      for (i = 1; i < size; i++) {
+        if (board[row - i][column].type.includes("empty"))
+          array.push(board[row - i][column]);
+      }
+      if (array.length == size - 1) {
+        for (i = 0; i < size; i++) {
+          board[row - i][column].type = shipType;
+        }
+      } else this.placeShip(board, shipType);
+    } else this.placeShip(board, shipType);
+  },
+
+  checkRight: function (array, board, row, column, size, shipType) {
+    for (i = 1; i < size; i++) {
+      if (board[row][column + i].type.includes("empty"))
+        array.push(board[row][column + i]);
+    }
+    if (array.length == size - 1) {
+      for (i = 0; i < size; i++) {
+        board[row][column + i].type = shipType;
+      }
+    } else this.checkLeft(array, board, row, column, size, shipType);
+  },
+
+  checkLeft: function (array, board, row, column, size, shipType) {
+    array.length = 0;
+    const shipExceedsBoardLeft = column - size + 1 >= 0;
+    if (shipExceedsBoardLeft) {
+      for (i = 1; i < size; i++) {
+        if (board[row][column - i].type.includes("empty"))
+          array.push(board[row][column - i]);
+      }
+      if (array.length == size - 1) {
+        for (i = 0; i < size; i++) {
+          board[row][column - i].type = shipType;
+        }
+      } else this.placeShip(board, shipType);
+    } else this.placeShip(board, shipType);
+  },
+
+  // Main function to place whole ship in empty spaces
+  placeShipsInEmptySpaces: function (
     board,
     row,
     column,
@@ -83,130 +143,44 @@ const data = {
     units,
     shipType
   ) {
-    console.log("funciton 'checkIfNextSpacesEmpty' is working");
     const checkArray = [];
-    if (direction == 0) {
-      for (i = 1; i < units; i++) {
-        if (board[row + i][column].type.includes("empty"))
-          checkArray.push(board[row + i][column]);
-      }
-      if (checkArray.length == units - 1) {
-        checkArray.forEach((space) => (space.type = shipType));
-        console.log("checkArray: ", checkArray);
-        for (i = 1; i < units; i++) {
-          board[row + i][column] = checkArray[i - 1];
-          console.log(
-            `board[${row} + ${i}][${column}]:`,
-            board[row + i][column]
-          );
-        }
-      } else {
-        checkArray = [];
-        for (i = 1; i < units; i++) {
-          if (board[row - i][column].type.includes("empty"))
-            checkArray.push(board[row - i][column]);
-        }
-        if (checkArray.length == units - 1) {
-          checkArray.forEach((space) => (space.type = shipType));
-          console.log("checkArray: ", checkArray);
-          for (i = 1; i < units; i++) {
-            board[row - i][column] = checkArray[i - 1];
-            console.log(
-              `board[${row} - ${i}][${column}]:`,
-              board[row + i][column]
-            );
-          }
-        } else this.placeShip(board, shipType);
-      }
-    } else if (direction == 1) {
-      for (i = 1; i < units; i++) {
-        if (board[row][column + i].type.includes("empty"))
-          checkArray.push(board[row][column + i]);
-      }
-      if (checkArray.length == units - 1) {
-        checkArray.forEach((space) => (space.type = shipType));
-        console.log("checkArray: ", checkArray);
-        for (i = 1; i < units; i++) {
-          board[row][column + i] = checkArray[i - 1];
-          console.log(
-            `board[${row}][${column} + ${i}]:`,
-            board[row + i][column]
-          );
-        }
-      } else {
-        checkArray = [];
-        for (i = 1; i < units; i++) {
-          if (board[row][column - i].type.includes("empty"))
-            checkArray.push(board[row][column - i]);
-        }
-        if (checkArray.length == units - 1) {
-          checkArray.forEach((space) => (space.type = shipType));
-          console.log("checkArray: ", checkArray);
-          for (i = 1; i < units; i++) {
-            board[row][column - i] = checkArray[i - 1];
-            console.log(
-              `board[${row}][${column} - ${i}]:`,
-              board[row + i][column]
-            );
-          }
-        } else this.placeShip(board, shipType);
-      }
-    }
-  },
+    const shipExceedsBoardDown = row + units - 1 <= board.length - 1;
+    const shipExceedsBoardUp = row - units + 1 >= 0;
+    const shipExceedsBoardRight = column + units - 1 <= board.length - 1;
+    const shipExceedsBoardLeft = column - units + 1 >= 0;
 
-  checkIfStartOffShipInBoard: function (board, row, column, direction, units) {
-    const addToShip = units - 1;
-    let result;
-    console.log("CHECKING");
     if (direction == 0) {
-      result =
-        row + addToShip < board.length || row - addToShip > 0 ? true : false;
+      if (shipExceedsBoardDown) {
+        this.checkDown(checkArray, board, row, column, units, shipType);
+      } else if (shipExceedsBoardUp) {
+        this.checkUp(checkArray, board, row, column, units, shipType);
+      } else this.placeShip(board, shipType);
     } else if (direction == 1) {
-      result =
-        column + addToShip < board.length || column - addToShip > 0
-          ? true
-          : false;
+      if (shipExceedsBoardRight) {
+        this.checkRight(checkArray, board, row, column, units, shipType);
+      } else if (shipExceedsBoardLeft) {
+        this.checkLeft(checkArray, board, row, column, units, shipType);
+      } else this.placeShip(board, shipType);
     }
-    console.log("DONE CHECK:", result);
-    return result;
   },
 
   placeShip: function (board, shipType) {
     const shipDirection = this.getRandomInt(2); // 0: vertical ship direction; 1 horizontal ship direction
-    console.log("direction: ", shipDirection);
     const placeShipInRow = this.getRandomInt(board.length);
-    console.log("row: ", placeShipInRow);
     const placeShipInColumn = this.getRandomInt(board.length);
-    console.log("column: ", placeShipInColumn);
     const shipLength = shipsConfig[shipType].units;
-
     const spaceCurrentlyEmpty =
       board[placeShipInRow][placeShipInColumn].type.includes("empty");
+
     if (spaceCurrentlyEmpty) {
-      board[placeShipInRow][placeShipInColumn].type = shipType;
-      console.log("checkIfStartOffShipInBoard");
-      if (
-        this.checkIfStartOffShipInBoard(
-          board,
-          placeShipInRow,
-          placeShipInColumn,
-          shipDirection,
-          shipLength
-        )
-      ) {
-        console.log("funciton 'checkIfStartOffShipInBoard' is working");
-        this.checkIfNextSpacesEmpty(
-          board,
-          placeShipInRow,
-          placeShipInColumn,
-          shipDirection,
-          shipLength,
-          shipType
-        );
-      } else {
-        board[placeShipInRow][placeShipInColumn].type = "empty";
-        this.placeShip(board, shipType);
-      }
+      this.placeShipsInEmptySpaces(
+        board,
+        placeShipInRow,
+        placeShipInColumn,
+        shipDirection,
+        shipLength,
+        shipType
+      );
     } else this.placeShip(board, shipType);
   },
 
@@ -232,7 +206,7 @@ const data = {
     const positionLetter = this.letterToNumber(selectedMove.charAt(0));
     const positionNumber = parseInt(selectedMove.charAt(1));
 
-    // console.clear();
+    console.clear();
 
     const isCoordOutBoard =
       positionLetter == null || positionNumber >= board.length;

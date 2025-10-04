@@ -28,8 +28,8 @@ function introduction(config) {
 }
 
 function handleGameCompletion(board) {
-  // console.clear();
-  printBoard(board);
+  console.clear();
+  printBoard(board, false);
   console.log(`========\n
 __   _______ _   _   _    _ _____ _   _
 \\ \\ / /  _  | | | | | |  | |_   _| \\ | |
@@ -44,7 +44,7 @@ function gameFlow(board) {
   let userWon = false;
   let attempts = 0;
   while (!userWon) {
-    printBoard(board, true);
+    printBoard(board, false);
     board = userMove(board);
     userWon = didUserWin(board);
     if (userWon) {
@@ -62,7 +62,7 @@ const runBattleship = (config, shipConfig) => {
   if (boardSelected === null) {
     console.log("Hope you come back to play soon!");
   } else {
-    // console.clear();
+    console.clear();
 
     startingBoard(boardSelected);
     generateShips(boardSelected, config, shipConfig);
